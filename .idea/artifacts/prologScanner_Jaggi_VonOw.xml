@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="prologScanner-Jaggi-VonOw">
+    <output-path>$PROJECT_DIR$/out/artifacts/prologScanner_Jaggi_VonOw</output-path>
+    <root id="archive" name="prologScanner-Jaggi-VonOw.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="ch.bfh.bti7064.w2013.jaggi-vonow" />
+    </root>
+  </artifact>
+</component>
