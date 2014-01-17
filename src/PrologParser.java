@@ -63,14 +63,27 @@ public class PrologParser {
         NeaState konstante = new NeaState("Konstante")  {
             @Override
             public boolean parseToken(String token) throws ParseException {
-                return token.matches("([a-z][a-zA-Z0-9_]*|[0-9]+)");
+                if(token.matches("([a-z][a-zA-Z0-9_]*|[0-9]+|!)")) {
+                    System.out.println(token);
+                    return true;
+                }
+                if(token.matches("'.*'")) {
+                    System.out.println(token);
+                    return true;
+                }
+                return false;
             }
         };
 
         NeaState variable = new NeaState("Variable") {
             @Override
             public boolean parseToken(String token) throws ParseException {
-                return token.matches("[A-Z_][a-zA-Z0-9_]*");
+
+                if(token.matches("[A-Z_][a-zA-Z0-9_]*")) {
+                    System.out.println(token);
+                    return true;
+                }
+                return false;
             }
         };
 
@@ -81,21 +94,28 @@ public class PrologParser {
                     return false;
                 }
 
+                System.out.println(token.substring(0, token.indexOf('(')));
+                System.out.println("(");
                 String containingToken = getContainingToken(token, '(',')');
-                return containingToken != null && parseWithOneOfFollowingStatesLeft(containingToken);
+                Boolean returnValue = parseWithOneOfFollowingStatesLeft(containingToken);
+                System.out.println(")");
+
+                return returnValue;
             }
         };
 
         NeaState anweisung = new NeaState("Anweisung") {
             @Override
             public boolean parseToken(String token) throws ParseException {
-                for(String subToken : splitListSave(token, ",", 0)) {
-                    if(parseWithOneOfFollowingStatesLeft(subToken)) {
-                        return true;
-                    }
+                Boolean allTrue = true;
+
+                List<String> tokenList = splitListSave(token, ",", 0);
+                for(int i = 0; i < tokenList.size(); i++) {
+                    allTrue = allTrue && parseWithOneOfFollowingStatesLeft(tokenList.get(i));
+                    if( i < (tokenList.size() - 1)) { System.out.println(","); }
                 }
 
-                return false;
+                return allTrue;
             }
         };
 
@@ -107,17 +127,21 @@ public class PrologParser {
                 }
 
                 if(token.equals("[]")) {
+                    System.out.println("[");
+                    System.out.println("]");
                     return true; // empty list
                 }
 
-                token = token.substring(1, token.length() - 1);
-                for(String subToken : splitListSave(token, "|", 0)) {
-                    if(parseWithOneOfFollowingStatesLeft(subToken)) {
-                        return true;
-                    }
+                Boolean allTrue = true;
+                System.out.println("[");
+                List<String> tokenList = splitListSave(token.substring(1, token.length() - 1), "|", 0);
+                for(int i = 0; i < tokenList.size(); i++) {
+                    allTrue = allTrue && parseWithOneOfFollowingStatesLeft(tokenList.get(i));
+                    if( i < (tokenList.size() - 1)) { System.out.println("|"); }
                 }
+                System.out.println("]");
 
-                return false;
+                return allTrue;
             }
         };
 
@@ -128,9 +152,13 @@ public class PrologParser {
                     return false;
                 }
 
+                Boolean allTrue = true;
                 List<String> parts = splitListSave(token, ":-", 0);
                 if (parts.size() == 2) {
-                    return parseWithOneOfFollowingStatesLeft(parts.get(0)) && parseWithOneOfFollowingStatesRight(parts.get(1));
+                    allTrue = allTrue && parseWithOneOfFollowingStatesLeft(parts.get(0));
+                    System.out.println(":-");
+                    allTrue = allTrue && parseWithOneOfFollowingStatesRight(parts.get(1));
+                    return allTrue;
                 }
                 return false;
 
@@ -144,20 +172,19 @@ public class PrologParser {
             }
         };
 
-        // add state machine connectino
+        // add state machine connection
         struktur.addValidFollingStateOneLeft(anweisung);
+        anweisung.addValidFollingStateOneLeft(liste);
         anweisung.addValidFollingStateOneLeft(variable);
         anweisung.addValidFollingStateOneLeft(konstante);
         anweisung.addValidFollingStateOneLeft(struktur);
-        anweisung.addValidFollingStateOneLeft(liste);
         liste.addValidFollingStateOneLeft(anweisung);
         zuweisung.addValidFollingStateOneLeft(struktur);
         zuweisung.addValidFollingStateOneLeft(variable);
         zuweisung.addValidFollingStateOneLeft(konstante);
         zuweisung.addValidFollingStateOneRight(anweisung);
-        term.addValidFollingStateOneLeft(struktur);
         term.addValidFollingStateOneLeft(zuweisung);
-
+        term.addValidFollingStateOneLeft(struktur);
 
         String tokens[] = entireFile.split("\\.");
 
@@ -165,15 +192,15 @@ public class PrologParser {
             try
             {
                 Boolean result = term.parseToken(tokens[i].trim() + ".");
-                System.out.print("Result " + i + " for " + tokens[i] + " -> ");
-                System.out.println(result);
+                if(!result) {
+                    throw new ParseException("Invalid row " + i + "!",0);
+                }
+                System.out.println(".");
             }
             catch (ParseException ex) {
                 System.out.println("Result " + i + " for " + tokens[i] + " -> Exception:");
                 ex.printStackTrace();
             }
-
-
         }
 	}
 

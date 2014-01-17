@@ -67,7 +67,7 @@ public abstract class NeaState {
             return term.substring(pos[0] + 1,pos[1]).trim();
         }
         else {
-            return null;
+            throw new ParseException("Could not get containing token", 0);
         }
     }
 
@@ -94,7 +94,7 @@ public abstract class NeaState {
             }
         }
 
-        return new int[]{};
+        throw new ParseException("Could not get containg token of " + term, 0);
     }
 
     public List<String> splitListSave(String term, String splitToken, int startPos) {
