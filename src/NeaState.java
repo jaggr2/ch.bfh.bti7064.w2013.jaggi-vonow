@@ -1,5 +1,3 @@
-import com.sun.javaws.exceptions.InvalidArgumentException;
-
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,16 +11,13 @@ import java.util.Objects;
  */
 public abstract class NeaState {
 
-
-
     private List<NeaState> validFollingStateLeft = new ArrayList<NeaState>();
     private List<NeaState> validFollingStateRight = new ArrayList<NeaState>();
+    private String name;
 
     public String getName() {
         return name;
     }
-
-    private String name;
 
     public List<NeaState> getValidFollingStateLeft() {
         return validFollingStateLeft;
@@ -47,7 +42,8 @@ public abstract class NeaState {
     public String getListOfFollingStatesLeft() {
         StringBuilder sb = new StringBuilder();
         for(NeaState state : this.getValidFollingStateLeft()) {
-            sb.append(state.getName() + ",");
+            sb.append(state.getName());
+            sb.append(",");
         }
         return sb.toString();
     }
@@ -55,7 +51,8 @@ public abstract class NeaState {
     public String getListOfFollingStatesRight() {
         StringBuilder sb = new StringBuilder();
         for(NeaState state : this.getValidFollingStateRight()) {
-            sb.append(state.getName() + ",");
+            sb.append(state.getName());
+            sb.append(",");
         }
         return sb.toString();
     }
@@ -77,7 +74,6 @@ public abstract class NeaState {
     public int[] findSourroundingChars(String term, char openingChar, char closingChar, int startPos) throws ParseException {
         int stack = 0;
         int posFirstChar = -1;
-        int posLastChar = -1;
         for(int i = startPos; i < term.length(); i++) {
             if(term.charAt(i) == openingChar) {
                 stack += 1;

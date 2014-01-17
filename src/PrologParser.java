@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
 
+/**
+ * Author: jaggr2, vonop1
+ */
 public class PrologParser {
 
 	public static void main (String args[]) throws IOException, ParseException {
@@ -20,17 +23,20 @@ public class PrologParser {
             String line = br.readLine();
 
             while (line != null) {
+                // filter empty lines
                 if(line.trim().length() <= 0) {  // filtere Leerzeilen
                     line = br.readLine();
                     continue;
                 }
 
+                // filter comments beginning with %
                 String firstChar = line.trim().substring(0,1); // Filtere Kommentarzeilen
                 if(firstChar.equals("%")) {
                     line = br.readLine();
                     continue;
                 }
 
+                // filter comments of type /* sample comment */
                 Integer start = 0;
                 Integer end = line.indexOf("/*");
                 String front;
@@ -44,10 +50,8 @@ public class PrologParser {
                     line = front + line.substring(start + 2);
                     end = line.indexOf("/*", start);
                 }
-                /* sample moves */
 
                 sb.append(line);
-                //sb.append(System.lineSeparator());
                 line = br.readLine();
             }
             entireFile = sb.toString();
@@ -55,18 +59,7 @@ public class PrologParser {
             br.close();
         }
 
-
-        /*
-        NeaState konstante = new NeaState("Konstante", "[[a-z]{1}[a-zA-Z0-9_]*|[0-9]+]{1}");
-        NeaState variable = new NeaState("Variable", "[A-Z_]{1}[a-zA-Z0-9_]*");
-        NeaState struktur = new NeaState("Stuktur", "[a-z_]+\\(\\Anweisung\\)");
-        NeaState anweisung = new NeaState("Anweisung", "([\\Variable|\\Konstante|\\Struktur|\\Liste]*[,|]{0,1}])+");
-        NeaState liste = new NeaState("Liste", "\\[\\Anweisung*\\]");
-        NeaState zuweisung = new NeaState("Zuweisung", "[\\Strukur|\\Variable|\\Konstante]:-\\Anweisung");
-        NeaState prologterm = new NeaState("Term", "[\\Struktur|\\Zuweisung]{1}\\.");
-        */
-
-        // define the NEA Automat
+        // define each State of the NEA machine
         NeaState konstante = new NeaState("Konstante")  {
             @Override
             public boolean parseToken(String token) throws ParseException {
@@ -89,11 +82,7 @@ public class PrologParser {
                 }
 
                 String containingToken = getContainingToken(token, '(',')');
-                if(containingToken == null) {
-                    return false;
-                }
-
-                return parseWithOneOfFollowingStatesLeft(containingToken);
+                return containingToken != null && parseWithOneOfFollowingStatesLeft(containingToken);
             }
         };
 
@@ -140,26 +129,22 @@ public class PrologParser {
                 }
 
                 List<String> parts = splitListSave(token, ":-", 0);
-                if(parts.size() != 2) {
-                    return false;
+                if (parts.size() == 2) {
+                    return parseWithOneOfFollowingStatesLeft(parts.get(0)) && parseWithOneOfFollowingStatesRight(parts.get(1));
                 }
+                return false;
 
-                return parseWithOneOfFollowingStatesLeft(parts.get(0)) && parseWithOneOfFollowingStatesRight(parts.get(1));
             }
         };
 
         NeaState term = new NeaState("Term") {
             @Override
             public boolean parseToken(String token) throws ParseException {
-                if(!token.matches(".*\\.")) {
-                    return false;
-                }
-
-                return parseWithOneOfFollowingStatesLeft(token.substring(0, token.length() - 1));
+                return token.matches(".*\\.") && parseWithOneOfFollowingStatesLeft(token.substring(0, token.length() - 1));
             }
         };
 
-
+        // add state machine connectino
         struktur.addValidFollingStateOneLeft(anweisung);
         anweisung.addValidFollingStateOneLeft(variable);
         anweisung.addValidFollingStateOneLeft(konstante);
@@ -175,7 +160,6 @@ public class PrologParser {
 
 
         String tokens[] = entireFile.split("\\.");
-
 
         for(int i = 0; i < tokens.length; i++) {
             try
