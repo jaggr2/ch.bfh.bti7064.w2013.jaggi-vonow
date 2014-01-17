@@ -70,7 +70,7 @@ public class PrologParser {
         NeaState konstante = new NeaState("Konstante")  {
             @Override
             public boolean parseToken(String token) throws ParseException {
-                return token.matches("[[a-z]{1}[a-zA-Z0-9_]*|[0-9]+]");
+                return token.matches("([a-z][a-zA-Z0-9_]*|[0-9]+)");
             }
         };
 
@@ -121,7 +121,14 @@ public class PrologParser {
                     return true; // empty list
                 }
 
-                return parseWithOneOfFollowingStatesLeft(token.substring(1, token.length() - 1));
+                token = token.substring(1, token.length() - 1);
+                for(String subToken : splitListSave(token, "|", 0)) {
+                    if(parseWithOneOfFollowingStatesLeft(subToken)) {
+                        return true;
+                    }
+                }
+
+                return false;
             }
         };
 

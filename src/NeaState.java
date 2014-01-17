@@ -114,7 +114,7 @@ public abstract class NeaState {
             if(term.charAt(i) == ')' || term.charAt(i) == ']') {
                 stack -= 1;
             }
-            if(term.charAt(i) == splitToken.charAt(correctCount)) {
+            if(term.charAt(i) == splitToken.charAt(correctCount) && stack == 0) {
 
                 if((correctCount + 1) == splitToken.length()) {
                     result.add(term.substring(lasPos, i - (correctCount)).trim());
